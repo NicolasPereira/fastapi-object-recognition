@@ -1,37 +1,33 @@
 import cv2
 import numpy as np
+produtos = []
+classes = None
+
+def create_json(classes, class_id, confidence):
+    confidencePorcent = confidence * 100
+    confidenceFormatted = round(confidencePorcent, 2)
+    infoProdutos = {"produto": classes[class_id], "precisao": confidenceFormatted}
+    produtos.append(infoProdutos)
+
 def get_output_layers(net):
     
     layer_names = net.getLayerNames()
     
-    output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    output_layers = [layer_names[i- 1] for i in net.getUnconnectedOutLayers()]
 
     return output_layers
-
-
-def draw_prediction(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
-
-    label = str(classes[class_id])
-
-    color = COLORS[class_id]
-
-    cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)
-
-    cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 def detect(foto): 
     image = cv2.imread(foto)
     Width = image.shape[1]
     Height = image.shape[0]
     scale = 0.00392
-    classes = None
-
     with open('yolov3.txt', 'r') as f:
         classes = [line.strip() for line in f.readlines()]
 
     COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
-    net = cv2.dnn.readNet(args.weights, 'yolov3.cfg')
+    net = cv2.dnn.readNet('yolov3.weights', 'yolov3.cfg')
 
     blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
 
@@ -66,10 +62,11 @@ def detect(foto):
     indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
 
     for i in indices:
-        i = i[0]
         box = boxes[i]
         x = box[0]
         y = box[1]
         w = box[2]
         h = box[3]
-        draw_prediction(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))
+        create_json(classes, class_ids[i], confidences[i])
+    
+    return produtos
