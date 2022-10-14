@@ -11,6 +11,14 @@ entender um pouco melhor sobre o ecossistema de Python.
 - Docker
 - Docker Compose
 
+## Baixe o arquivo Yolov3 Weights
+
+Para executar o código será necessário este arquivo, após clonar o repositório execute este comando na raiz do projeto.
+
+```shell
+wget https://pjreddie.com/media/files/yolov3.weights
+```
+
 ## Como rodar o projeto.
 
 1 - Clone este projeto
