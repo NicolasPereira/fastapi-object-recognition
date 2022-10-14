@@ -1,13 +1,12 @@
 import cv2
 import numpy as np
-produtos = []
 classes = None
 
 def create_json(classes, class_id, confidence):
     confidencePorcent = confidence * 100
     confidenceFormatted = round(confidencePorcent, 2)
     infoProdutos = {"produto": classes[class_id], "precisao": confidenceFormatted}
-    produtos.append(infoProdutos)
+    return infoProdutos
 
 def get_output_layers(net):
     
@@ -22,6 +21,7 @@ def detect(foto):
     Width = image.shape[1]
     Height = image.shape[0]
     scale = 0.00392
+    produtos = []
     with open('yolov3.txt', 'r') as f:
         classes = [line.strip() for line in f.readlines()]
 
@@ -67,6 +67,7 @@ def detect(foto):
         y = box[1]
         w = box[2]
         h = box[3]
-        create_json(classes, class_ids[i], confidences[i])
-    
-    return produtos
+        produtos.append(create_json(classes, class_ids[i], confidences[i]))
+    resultados = produtos.copy()
+    produtos.clear()
+    return resultados
