@@ -16,7 +16,7 @@ entender um pouco melhor sobre o ecossistema de Python.
 1 - Clone este projeto
 
 ```shell
-git@github.com:NicolasPereira/fastapi-image-recognization.git
+git@github.com:NicolasPereira/fastapi-object-recognition.git
 ```
 
 2 - Execute o build do Docker
