@@ -1,32 +1,46 @@
-# Python API Boilerplate - FastApi
+# Projeto FastAPI
 
-FastApi Documentation [Read more](https://fastapi.tiangolo.com/)
+Este projeto tem como objetivo criar uma API simples utilizando o FastAPI e
+entender um pouco melhor sobre o ecossistema de Python.
 
-## Features
+## Tecnologias
 
-- Automatic documentation using swagger docs or Redoc
-- Python types [Read More](https://fastapi.tiangolo.com/python-types/)
-- Hot reaload, just keep coding and the server will restart itself!
-- Remote Debugging
+- Python
+- FastAPI
+- Uvicorn
+- Docker
+- Docker Compose
 
-## Running the code
+## Como rodar o projeto.
 
-You should have docker and docker compose istalled. When starting the application will search for a `.env` file. If you don't have one you can copy the `development.env` as a base.
+1 - Clone este projeto
 
-To start you development environment just run :
-
-```sh
-  docker-compose up
+```shell
+git@github.com:NicolasPereira/fastapi-image-recognization.git
 ```
 
-Or if you want to run the container in detached mode:
+2 - Execute o build do Docker
 
-```sh
-  docker-compose up -d
+```shell
+docker-compose build
 ```
 
-To stop it:
+3 - Suba o serviço
 
-```sh
-  docker-compose down
+```shell
+docker-compose up -d
 ```
+
+4 - Acesse o serviço
+
+```shell
+http://localhost:8000/
+```
+
+5 - A documentação se encontra em
+
+```shell
+http://localhost:8000/docs
+```
+
+Made with 💜 by [@devnic\_](https://twitter.com/devnic_)
