@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 def get_output_layers(net):
     
     layer_names = net.getLayerNames()
@@ -30,7 +31,7 @@ def detect(foto):
 
     COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
-    net = cv2.dnn.readNet(args.weights, 'yolov3.txt')
+    net = cv2.dnn.readNet(args.weights, 'yolov3.cfg')
 
     blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
 
