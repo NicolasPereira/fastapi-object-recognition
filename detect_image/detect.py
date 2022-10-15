@@ -1,6 +1,24 @@
+"""
+├── yolo
+│   ├── labels.txt
+│   ├── yolov4-tiny.cfg
+│   ├── yolov4-tiny.weights
+├── people.jpg
+├── people_out.jpg
+├── street.jpg
+├── street_out.jpg
+├── video.mp4
+├── video_out.avi
+├── yolo_image.py
+└── yolo_video.py
+ if program cant find yolo folder in main folder it will crash."""
+# example usage: python yolo_image.py -i street.jpg -o output.jpg
+import argparse
+import time
+import glob
+
 import cv2
 import numpy as np
-classes = None
 
 def create_json(classes, class_id, confidence):
     confidencePorcent = confidence * 100
@@ -8,66 +26,61 @@ def create_json(classes, class_id, confidence):
     infoProdutos = {"produto": classes[class_id], "precisao": confidenceFormatted}
     return infoProdutos
 
-def get_output_layers(net):
-    
-    layer_names = net.getLayerNames()
-    
-    output_layers = [layer_names[i- 1] for i in net.getUnconnectedOutLayers()]
+def detect(imgpath):
 
-    return output_layers
+    CONFIDENCE_THRESHOLD = 0.7
+    NMS_THRESHOLD = 0.4
 
-def detect(foto): 
-    image = cv2.imread(foto)
-    Width = image.shape[1]
-    Height = image.shape[0]
-    scale = 0.00392
-    produtos = []
-    with open('yolov3.txt', 'r') as f:
-        classes = [line.strip() for line in f.readlines()]
+    weights = glob.glob("detect_image/yolo/*.weights")[0]
+    labels = glob.glob("detect_image/yolo/*.txt")[0]
+    cfg = glob.glob("detect_image/yolo/*.cfg")[0]
 
-    COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
+    lbls = list()
+    with open(labels, "r") as f:
+        lbls = [c.strip() for c in f.readlines()]
 
-    net = cv2.dnn.readNet('yolov3.weights', 'yolov3.cfg')
+    nn = cv2.dnn.readNetFromDarknet(cfg, weights)
+    nn.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+    nn.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
-    blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
+    layer = nn.getLayerNames()
+    layer = [layer[i - 1] for i in nn.getUnconnectedOutLayers()]
 
-    net.setInput(blob)
+    image = cv2.imread(imgpath)
+    assert image is not None, f"Image is none, check file path. Given path is: {imgpath}"
 
-    outs = net.forward(get_output_layers(net))
+    (H, W) = image.shape[:2]
 
-    class_ids = []
-    confidences = []
-    boxes = []
-    conf_threshold = 0.5
-    nms_threshold = 0.4
+    blob = cv2.dnn.blobFromImage(image, 1 / 255, (416, 416), swapRB=True, crop=False)
+    nn.setInput(blob)
+    start_time = time.time()
+    layer_outs = nn.forward(layer)
+    end_time = time.time()
 
+    boxes = list()
+    confidences = list()
+    class_ids = list()
 
-    for out in outs:
-        for detection in out:
+    for output in layer_outs:
+        for detection in output:
             scores = detection[5:]
             class_id = np.argmax(scores)
             confidence = scores[class_id]
-            if confidence > 0.5:
-                center_x = int(detection[0] * Width)
-                center_y = int(detection[1] * Height)
-                w = int(detection[2] * Width)
-                h = int(detection[3] * Height)
-                x = center_x - w / 2
-                y = center_y - h / 2
-                class_ids.append(class_id)
+
+            if confidence > CONFIDENCE_THRESHOLD:
+                box = detection[0:4] * np.array([W, H, W, H])
+                (center_x, center_y, width, height) = box.astype("int")
+
+                x = int(center_x - (width / 2))
+                y = int(center_y - (height / 2))
+
+                boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
-                boxes.append([x, y, w, h])
+                class_ids.append(class_id)
 
+    idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
 
-    indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
-
-    for i in indices:
-        box = boxes[i]
-        x = box[0]
-        y = box[1]
-        w = box[2]
-        h = box[3]
-        produtos.append(create_json(classes, class_ids[i], confidences[i]))
-    resultados = produtos.copy()
-    produtos.clear()
-    return resultados
+    json = []
+    for i in idxs.flatten():
+        json.append(create_json(lbls, class_ids[i], confidences[i]))
+    return json
