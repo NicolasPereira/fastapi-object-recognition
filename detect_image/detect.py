@@ -80,7 +80,10 @@ def detect(imgpath):
 
     idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
 
-    json = []
-    for i in idxs.flatten():
-        json.append(create_json(lbls, class_ids[i], confidences[i]))
-    return json
+    if len(idxs) > 0:
+        json = []
+        for i in idxs.flatten():
+            json.append(create_json(lbls, class_ids[i], confidences[i]))
+        return json
+    else:
+        return {"error": "Não foi reconhecido nenhum produto!"}
